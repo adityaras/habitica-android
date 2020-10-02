@@ -108,15 +108,6 @@
             app:destination="@id/challengeDetailFragment" />
     </fragment>
     <fragment
-        android:id="@+id/shopsFragment"
-        android:name="com.habitrpg.android.habitica.ui.fragments.inventory.shops.ShopsFragment"
-        android:label="@string/sidebar_shops" >
-        <argument
-            android:name="selectedTab"
-            app:argType="integer"
-            android:defaultValue="0" />
-    </fragment>
-    <fragment
         android:id="@+id/avatarOverviewFragment"
         android:name="com.habitrpg.android.habitica.ui.fragments.inventory.customization.AvatarOverviewFragment"
         android:label="@string/sidebar_avatar" >
@@ -218,7 +209,16 @@
         android:label="@string/sidebar_help" >
         <argument
             android:name="position"
-            app:argType="integer" />
+            app:argType="integer"
+            android:defaultValue="0"/>
+        <argument
+            android:name="question"
+            app:argType="string"
+            app:nullable="true"/>
+        <argument
+            android:name="answer"
+            app:argType="string"
+            app:nullable="true"/>
     </fragment>
     <fragment
         android:id="@+id/aboutFragment"
@@ -304,8 +304,7 @@
     </activity>
     <fragment
         android:id="@+id/petDetailRecyclerFragment"
-        android:name="com.habitrpg.android.habitica.ui.fragments.inventory.stable.PetDetailRecyclerFragment"
-        android:label="@string/pets">
+        android:name="com.habitrpg.android.habitica.ui.fragments.inventory.stable.PetDetailRecyclerFragment">
         <argument
             android:name="type"
             app:argType="string" />
@@ -319,8 +318,7 @@
     </fragment>
     <fragment
         android:id="@+id/mountDetailRecyclerFragment"
-        android:name="com.habitrpg.android.habitica.ui.fragments.inventory.stable.MountDetailRecyclerFragment"
-        android:label="@string/mounts" >
+        android:name="com.habitrpg.android.habitica.ui.fragments.inventory.stable.MountDetailRecyclerFragment">
         <argument
             android:name="type"
             app:argType="string" />
@@ -429,4 +427,12 @@
         android:id="@+id/bugFixFragment"
         android:name="com.habitrpg.android.habitica.ui.fragments.support.BugFixFragment"
         android:label="@string/bugs_fixes" />
+    <activity
+        android:id="@+id/adventureGuideActivity"
+        android:name="com.habitrpg.android.habitica.ui.activities.AdventureGuideActivity"
+        android:label="" />
+    <fragment
+        android:id="@+id/promoInfoFragment"
+        android:name="com.habitrpg.android.habitica.ui.fragments.PromoInfoFragment"
+        android:label="" />
 </navigation>

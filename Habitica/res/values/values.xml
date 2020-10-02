@@ -33,6 +33,18 @@
         <item>@string/avatar_size_broad</item>
     </string-array>
 
+    <string-array name="TaskDisplayTypes">
+        <item>Standard</item>
+        <item>Compact</item>
+        <item>Minimal</item>
+    </string-array>
+
+    <string-array name="TaskDisplayValues">
+        <item>standard</item>
+        <item>compact</item>
+        <item>minimal</item>
+    </string-array>
+
     <string-array name="Language">
         <item>English</item>
         <item>Български</item>
@@ -137,6 +149,18 @@
         <item>green</item>
         <item>teal</item>
         <item>blue</item>
+    </string-array>
+
+    <string-array name="AppThemeModes">
+        <item>Follow System</item>
+        <item>Always Light</item>
+        <item>Always Dark</item>
+    </string-array>
+
+    <string-array name="AppThemeModeValues">
+        <item>system</item>
+        <item>light</item>
+        <item>dark</item>
     </string-array>
 
     <string-array name="server_urls">

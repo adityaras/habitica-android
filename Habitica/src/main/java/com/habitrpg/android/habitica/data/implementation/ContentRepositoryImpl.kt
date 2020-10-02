@@ -1,6 +1,7 @@
 package com.habitrpg.android.habitica.data.implementation
 
 import android.content.Context
+import androidx.preference.PreferenceManager
 import com.habitrpg.android.habitica.data.ApiClient
 import com.habitrpg.android.habitica.data.ContentRepository
 import com.habitrpg.android.habitica.data.local.ContentLocalRepository
@@ -22,7 +23,7 @@ abstract class ContentRepositoryImpl<T : ContentLocalRepository>(localRepository
 
     override fun retrieveContent(context: Context?, forced: Boolean): Flowable<ContentResult> {
         val now = Date().time
-        return if (forced || now - this.lastContentSync > 3) {
+        return if (forced || now - this.lastContentSync > 300000) {
             lastContentSync = now
             apiClient.content.doOnNext {
                 context?.let {context ->
@@ -36,11 +37,19 @@ abstract class ContentRepositoryImpl<T : ContentLocalRepository>(localRepository
         }
     }
 
-    override fun retrieveWorldState(): Flowable<WorldState> {
+    override fun retrieveWorldState(context: Context?): Flowable<WorldState> {
         val now = Date().time
         return if (now - this.lastWorldStateSync > 3600000) {
             lastWorldStateSync = now
-            apiClient.worldState.doOnNext { localRepository.saveWorldState(it) }
+            apiClient.worldState.doOnNext {
+                localRepository.saveWorldState(it)
+
+                val editor = PreferenceManager.getDefaultSharedPreferences(context).edit()
+                editor.putString("currentEvent", it.currentEventKey)
+                editor.putLong("currentEventStartDate", it.currentEventStartDate?.time ?: 0)
+                editor.putLong("currentEventEndDate", it.currentEventEndDate?.time ?: 0)
+                editor.apply()
+            }
         } else {
             Flowable.empty()
         }

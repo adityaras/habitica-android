@@ -1,22 +1,24 @@
 package com.habitrpg.android.habitica.ui.fragments
 
 import android.content.Context
+import android.graphics.PorterDuff
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
+import androidx.viewbinding.ViewBinding
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.tabs.TabLayout
+import com.habitrpg.android.habitica.R
 import com.habitrpg.android.habitica.data.ApiClient
 import com.habitrpg.android.habitica.data.UserRepository
+import com.habitrpg.android.habitica.extensions.getThemeColor
 import com.habitrpg.android.habitica.helpers.RxErrorHandler
 import com.habitrpg.android.habitica.helpers.SoundManager
 import com.habitrpg.android.habitica.models.user.User
 import com.habitrpg.android.habitica.ui.activities.MainActivity
-import io.reactivex.functions.Consumer
+import com.habitrpg.android.habitica.ui.helpers.ToolbarColorHelper
 import javax.inject.Inject
 
-abstract class BaseMainFragment : BaseFragment() {
+abstract class BaseMainFragment<VB: ViewBinding> : BaseFragment<VB>() {
 
     @Inject
     lateinit var apiClient: ApiClient
@@ -24,6 +26,8 @@ abstract class BaseMainFragment : BaseFragment() {
     lateinit var userRepository: UserRepository
     @Inject
     lateinit var soundManager: SoundManager
+
+    protected var showsBackButton: Boolean = false
 
     open val activity get() = getActivity() as? MainActivity
     val tabLayout get() = activity?.binding?.detailTabs
@@ -45,8 +49,7 @@ abstract class BaseMainFragment : BaseFragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        super.onCreateView(inflater, container, savedInstanceState)
-        compositeSubscription.add(userRepository.getUser().subscribe(Consumer { user = it }, RxErrorHandler.handleEmptyError()))
+        compositeSubscription.add(userRepository.getUser().subscribe({ user = it }, RxErrorHandler.handleEmptyError()))
 
         if (this.usesBottomNavigation) {
             bottomNavigation?.visibility = View.VISIBLE
@@ -66,7 +69,23 @@ abstract class BaseMainFragment : BaseFragment() {
             enableToolbarScrolling()
         }
 
-        return null
+        return super.onCreateView(inflater, container, savedInstanceState)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        binding = null
+    }
+
+    override fun onResume() {
+        super.onResume()
+        activity?.drawerToggle?.isDrawerIndicatorEnabled = !showsBackButton
+        activity?.supportActionBar?.setDisplayHomeAsUpEnabled(true)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+        activity?.toolbar?.let { ToolbarColorHelper.colorizeToolbar(it, activity, null) }
     }
 
     private fun updateTabLayoutVisibility() {
@@ -100,5 +119,13 @@ abstract class BaseMainFragment : BaseFragment() {
     private fun enableToolbarScrolling() {
         val params = collapsingToolbar?.layoutParams as? AppBarLayout.LayoutParams
         params?.scrollFlags = AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL or AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED
+    }
+
+
+    protected fun tintMenuIcon(item: MenuItem?) {
+        context?.getThemeColor(R.attr.headerTextColor)?.let {
+            item?.icon?.setTint(it)
+            item?.icon?.setTintMode(PorterDuff.Mode.MULTIPLY)
+        }
     }
 }

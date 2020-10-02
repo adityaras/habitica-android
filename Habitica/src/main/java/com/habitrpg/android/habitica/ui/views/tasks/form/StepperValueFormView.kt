@@ -3,24 +3,19 @@ package com.habitrpg.android.habitica.ui.views.tasks.form
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
-import android.widget.EditText
-import android.widget.ImageButton
 import android.widget.RelativeLayout
 import com.habitrpg.android.habitica.R
+import com.habitrpg.android.habitica.databinding.FormStepperValueBinding
 import com.habitrpg.android.habitica.extensions.OnChangeTextWatcher
 import com.habitrpg.android.habitica.extensions.asDrawable
-import com.habitrpg.android.habitica.extensions.inflate
-import com.habitrpg.android.habitica.ui.helpers.bindView
+import com.habitrpg.android.habitica.extensions.layoutInflater
 import com.habitrpg.android.habitica.ui.views.HabiticaIconsHelper
 import java.text.DecimalFormat
 
 class StepperValueFormView @JvmOverloads constructor(
         context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : RelativeLayout(context, attrs, defStyleAttr) {
-
-    private val editText: EditText by bindView(R.id.edit_text)
-    private val upButton: ImageButton by bindView(R.id.up_button)
-    private val downButton: ImageButton by bindView(R.id.down_button)
+    private val binding = FormStepperValueBinding.inflate(context.layoutInflater, this)
 
     var onValueChanged: ((Double) -> Unit)? = null
 
@@ -40,10 +35,10 @@ class StepperValueFormView @JvmOverloads constructor(
         if (oldValue != new) {
             valueString = decimalFormat.format(newValue)
         }
-        downButton.isEnabled = field > minValue
+        binding.downButton.isEnabled = field > minValue
         maxValue?.let {
             if (it == 0.0) return@let
-            upButton.isEnabled = value < it
+            binding.upButton.isEnabled = value < it
         }
 
         onValueChanged?.invoke(value)
@@ -54,32 +49,34 @@ class StepperValueFormView @JvmOverloads constructor(
 
     private var valueString = ""
     set(value) {
-        if (value.isEmpty()) return
+        val hasChanged = field != value || binding.editText.text.toString() != field
         field = value
+        if (value.isEmpty()) {
+            onValueChanged?.invoke(0.0)
+            return
+        }
 
-        if (editText.text.toString() != field) {
-            editText.setText(field)
+        if (hasChanged) {
+            binding.editText.setText(field)
             if (editTextIsFocused) {
-                editText.setSelection(field.length)
+                binding.editText.setSelection(field.length)
             }
         }
         val newValue = field.toDoubleOrNull() ?: 0.0
-        if (this.value != newValue) {
+        if (this.value != newValue || hasChanged) {
             this.value = newValue
         }
     }
 
     var iconDrawable: Drawable?
     get() {
-        return editText.compoundDrawables.firstOrNull()
+        return binding.editText.compoundDrawables.firstOrNull()
     }
     set(value) {
-        editText.setCompoundDrawablesWithIntrinsicBounds(value, null, null, null)
+        binding.editText.setCompoundDrawablesWithIntrinsicBounds(value, null, null, null)
     }
 
     init {
-        inflate(R.layout.form_stepper_value, true)
-
         val attributes = context.theme?.obtainStyledAttributes(
                 attrs,
                 R.styleable.StepperValueFormView,
@@ -92,16 +89,16 @@ class StepperValueFormView @JvmOverloads constructor(
         iconDrawable = attributes?.getDrawable(R.styleable.StepperValueFormView_iconDrawable) ?: HabiticaIconsHelper.imageOfGold().asDrawable(context.resources)
 
 
-        upButton.setOnClickListener {
+        binding.upButton.setOnClickListener {
             value += 1
         }
-        downButton.setOnClickListener {
+        binding.downButton.setOnClickListener {
             value -= 1
         }
 
-        editText.addTextChangedListener(OnChangeTextWatcher { s, _, _, _ ->
+        binding.editText.addTextChangedListener(OnChangeTextWatcher { s, _, _, _ ->
             valueString = s.toString()
         })
-        editText.setOnFocusChangeListener { _, hasFocus -> editTextIsFocused = hasFocus }
+        binding.editText.setOnFocusChangeListener { _, hasFocus -> editTextIsFocused = hasFocus }
     }
 }

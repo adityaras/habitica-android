@@ -9,7 +9,6 @@ import com.habitrpg.android.habitica.R
 import com.habitrpg.android.habitica.models.Tag
 import com.habitrpg.android.habitica.models.user.Stats
 import com.habitrpg.android.habitica.ui.helpers.MarkdownParser
-import io.reactivex.functions.Consumer
 import io.realm.RealmList
 import io.realm.RealmObject
 import io.realm.annotations.Ignore
@@ -33,6 +32,7 @@ open class Task : RealmObject, Parcelable {
     @TaskTypes
     var type: String = ""
     var challengeID: String? = null
+    var challengeBroken: String? = null
     var attribute: String? = Stats.STRENGTH
     var value: Double = 0.0
     var tags: RealmList<Tag>? = RealmList()
@@ -122,7 +122,7 @@ open class Task : RealmObject, Parcelable {
                 this.value < -20 -> return R.color.maroon_50
                 this.value < -10 -> return R.color.red_50
                 this.value < -1 -> return R.color.orange_50
-                this.value < 1 -> return R.color.yellow_50
+                this.value < 1 -> return R.color.yellow_10
                 this.value < 5 -> return R.color.green_50
                 this.value < 10 -> return R.color.teal_50
                 else -> R.color.blue_50
@@ -135,7 +135,7 @@ open class Task : RealmObject, Parcelable {
                 this.value < -20 -> return R.color.maroon_10
                 this.value < -10 -> return R.color.red_10
                 this.value < -1 -> return R.color.orange_10
-                this.value < 1 -> return R.color.yellow_10
+                this.value < 1 -> return R.color.yellow_5
                 this.value < 5 -> return R.color.green_10
                 this.value < 10 -> return R.color.teal_10
                 else -> R.color.blue_10
@@ -198,7 +198,7 @@ open class Task : RealmObject, Parcelable {
             return this.parsedText ?: ""
         }
 
-        MarkdownParser.parseMarkdownAsync(this.text, Consumer { parsedText ->
+        MarkdownParser.parseMarkdownAsync(this.text, { parsedText ->
             this.parsedText = parsedText
             callback(parsedText)
         })
@@ -212,7 +212,7 @@ open class Task : RealmObject, Parcelable {
         }
 
         if (notes?.isNotEmpty() == true) {
-            MarkdownParser.parseMarkdownAsync(notes, Consumer { parsedText ->
+            MarkdownParser.parseMarkdownAsync(notes, { parsedText ->
                 parsedNotes = parsedText
                 callback(parsedText)
             })

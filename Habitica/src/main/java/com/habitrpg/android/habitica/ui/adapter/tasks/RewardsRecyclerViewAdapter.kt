@@ -19,19 +19,30 @@ import io.reactivex.Flowable
 import io.reactivex.subjects.PublishSubject
 import io.realm.OrderedRealmCollection
 
-class RewardsRecyclerViewAdapter(private var customRewards: OrderedRealmCollection<Task>?, private val layoutResource: Int, private val user: User?, private val configManager: AppConfigManager) : RecyclerView.Adapter<RecyclerView.ViewHolder>(), TaskRecyclerViewAdapter {
+class RewardsRecyclerViewAdapter(private var customRewards: OrderedRealmCollection<Task>?, private val layoutResource: Int, private val user: User?) : RecyclerView.Adapter<RecyclerView.ViewHolder>(), TaskRecyclerViewAdapter {
     private var inAppRewards: OrderedRealmCollection<ShopItem>? = null
 
-    val errorButtonEventsSubject = PublishSubject.create<String>()
-    override val errorButtonEvents = errorButtonEventsSubject.toFlowable(BackpressureStrategy.DROP)
+    private val errorButtonEventsSubject = PublishSubject.create<String>()
+    override val errorButtonEvents: Flowable<String> = errorButtonEventsSubject.toFlowable(BackpressureStrategy.DROP)
     private var taskScoreEventsSubject = PublishSubject.create<Pair<Task, TaskDirection>>()
     override val taskScoreEvents: Flowable<Pair<Task, TaskDirection>> = taskScoreEventsSubject.toFlowable(BackpressureStrategy.LATEST)
     private var checklistItemScoreSubject = PublishSubject.create<Pair<Task, ChecklistItem>>()
     override val checklistItemScoreEvents: Flowable<Pair<Task, ChecklistItem>> = checklistItemScoreSubject.toFlowable(BackpressureStrategy.DROP)
     private var taskOpenEventsSubject = PublishSubject.create<Task>()
     override val taskOpenEvents: Flowable<Task> = taskOpenEventsSubject.toFlowable(BackpressureStrategy.LATEST)
+    protected var brokenTaskEventsSubject = PublishSubject.create<Task>()
+    override val brokenTaskEvents: Flowable<Task> = brokenTaskEventsSubject.toFlowable(BackpressureStrategy.DROP)
     private var purchaseCardSubject = PublishSubject.create<ShopItem>()
     val purchaseCardEvents: Flowable<ShopItem> = purchaseCardSubject.toFlowable(BackpressureStrategy.LATEST)
+
+
+    override var taskDisplayMode: String = "standard"
+        set(value) {
+            if (field != value) {
+                field = value
+                notifyDataSetChanged()
+            }
+        }
 
     private val inAppRewardCount: Int
         get() {
@@ -55,8 +66,10 @@ class RewardsRecyclerViewAdapter(private var customRewards: OrderedRealmCollecti
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return if (viewType == VIEWTYPE_CUSTOM_REWARD) {
-            RewardViewHolder(getContentView(parent), { task, direction -> taskScoreEventsSubject.onNext(Pair(task, direction)) }) {
+            RewardViewHolder(getContentView(parent), { task, direction -> taskScoreEventsSubject.onNext(Pair(task, direction)) }, {
                 task -> taskOpenEventsSubject.onNext(task)
+            }) {
+                task -> brokenTaskEventsSubject.onNext(task)
             }
         } else {
             val viewHolder = ShopItemViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.row_shopitem, parent, false))
@@ -71,7 +84,7 @@ class RewardsRecyclerViewAdapter(private var customRewards: OrderedRealmCollecti
         if (customRewards != null && position < customRewardCount) {
             val reward = customRewards?.get(position) ?: return
             val gold = user?.stats?.gp ?: 0.0
-            (holder as? RewardViewHolder)?.bind(reward, position, reward.value < gold)
+            (holder as? RewardViewHolder)?.bind(reward, position, reward.value <= gold, taskDisplayMode)
         } else if (inAppRewards != null) {
             val item = inAppRewards?.get(position - customRewardCount) ?: return
             if (holder is ShopItemViewHolder) {
@@ -124,7 +137,6 @@ class RewardsRecyclerViewAdapter(private var customRewards: OrderedRealmCollecti
 
     companion object {
         private const val VIEWTYPE_CUSTOM_REWARD = 0
-        private const val VIEWTYPE_HEADER = 1
         private const val VIEWTYPE_IN_APP_REWARD = 2
     }
 }

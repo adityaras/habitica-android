@@ -57,7 +57,7 @@ open class ShopItem : RealmObject() {
     var level: Int? = null
 
     val isTypeItem: Boolean
-        get() = "eggs" == purchaseType || "hatchingPotions" == purchaseType || "food" == purchaseType || "armoire" == purchaseType || "potion" == purchaseType
+        get() = "eggs" == purchaseType || "hatchingPotions" == purchaseType || "food" == purchaseType || "armoire" == purchaseType || "potion" == purchaseType || "debuffPotion" == purchaseType
 
     val isTypeQuest: Boolean
         get() = "quests" == purchaseType
@@ -68,11 +68,12 @@ open class ShopItem : RealmObject() {
     val isTypeAnimal: Boolean
         get() = "pets" == purchaseType || "mounts" == purchaseType
 
+    val canPurchaseBulk: Boolean
+        get() = "eggs" == purchaseType || "hatchingPotions" == purchaseType || "food" == purchaseType || "gems" == purchaseType
+
     fun canAfford(user: User?, quantity: Int): Boolean = when(currency) {
-        "gold" -> (value * quantity) <= user?.stats?.gp ?: 0.0
-        "gems" -> true
-        "hourglasses" -> true
-        else -> false
+        "gold" -> (value * quantity) <= (user?.stats?.gp ?: 0.0)
+        else -> true
     }
 
     override fun equals(other: Any?): Boolean {
